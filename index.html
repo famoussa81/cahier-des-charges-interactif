@@ -562,15 +562,26 @@ function s3(){
     {t:(TM[S.type]||{}).t,ks:(TQ[S.type]||[]).map(function(q){return q.id;})},
     {t:'Objectifs',ks:BQ.map(function(q){return q.id;})}
   ];
+  // Read saved answers from localStorage (survives step changes)
+  var saved={};
+  try{var _r=localStorage.getItem('sng_q');if(_r){var _d=JSON.parse(_r);if(_d.answers)saved=_d.answers;}}catch(_e){}
+  var _all=gQ(S.type);
   secs.forEach(function(sec){
     h+='<div class="rs"><h3>'+sec.t+'</h3>';
     if(sec.its)sec.its.forEach(function(i){h+='<div class="ri"><div class="q">'+i.q+'</div><div class="a">'+(i.a||'-')+'</div></div>';});
     if(sec.ks)sec.ks.forEach(function(id){
-      var q=all.find(function(x){return x.id===id;});
+      var q=_all.find(function(x){return x.id===id;});
       if(!q)return;
-      var g=$('[data-q="'+id+'"]');
-      if(g&&g.classList.contains('dh'))return;
-      var val=fv(id);
+      // Get value: try saved answers first, fallback to DOM
+      var val='';
+      if(saved[id]!==undefined){
+        var sv=saved[id];
+        val=Array.isArray(sv)?sv.join(', '):sv;
+      }else{
+        var g=$('[data-q="'+id+'"]');
+        if(g&&g.classList.contains('dh'))return;
+        val=fv(id);
+      }
       h+='<div class="ri"><div class="q">'+q.q+'</div><div class="a'+(val?'':' e')+'">'+(val?esc(val):'-')+'</div></div>';
     });
     h+='</div>';
@@ -616,10 +627,19 @@ function sA(){
 
 function cl(t,n,e){
   var d=gQ(t),r=[{s:'Type',a:TN[t]||t}];
+  // Read saved answers for values across all steps
+  var _saved={};
+  try{var _r=localStorage.getItem('sng_q');if(_r){var _d=JSON.parse(_r);if(_d.answers)_saved=_d.answers;}}catch(_e){}
   d.forEach(function(q){
-    var g=$('[data-q="'+q.id+'"]');
-    if(g&&g.classList.contains('dh'))return;
-    var val=fv(q.id);
+    var val='';
+    if(_saved[q.id]!==undefined){
+      var sv=_saved[q.id];
+      val=Array.isArray(sv)?sv.join(', '):String(sv);
+    }else{
+      var g=$('[data-q="'+q.id+'"]');
+      if(g&&g.classList.contains('dh'))return;
+      val=fv(q.id);
+    }
     if(val)r.push({s:q.q,a:val});
   });
   var dt=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -664,7 +684,10 @@ function gP(){
 
 function sv(){
   if(!S.type)return;
-  var d={v:'3.1',type:S.type,step:S.step,name:N.name.value,email:N.email.value,files:S.files,answers:{}};
+  // Merge with existing saved data to preserve answers from other steps
+  var prev={};
+  try{var _r=localStorage.getItem('sng_q');if(_r)prev=JSON.parse(_r);}catch(_e){}
+  var d={v:'3.1',type:S.type,step:S.step,name:N.name.value,email:N.email.value,files:S.files,answers:(prev.answers||{})};
   var all=gQ(S.type);
   all.forEach(function(q){
     var e=el(q.id);
