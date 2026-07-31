@@ -42,7 +42,7 @@ check(html.includes('@media'), 'Media queries');
 check(html.includes('.bn{'), 'Classe .bn (bottom nav)');
 
 console.log('\n📄 4. ÉLÉMENTS HTML');
-['iN','iE','sc','bottomNav','btnBack','btnNext','stepLabel','logoTop','mo','eA','cfgT','cfgB','cfgE','cfgN','cfgC'].forEach(function(id) {
+['iN','iE','sc','bottomNav','btnBack','btnNext','stepLabel','logoTop','mo','eA'].forEach(function(id) {
   check(html.includes('id="' + id + '"') || html.includes("id='" + id + "'"), '#' + id + ' présent');
 });
 
@@ -88,3 +88,4 @@ console.log('  6. Récap → Envoyer → Modal PRD');
 console.log('  7. Config pro → personnaliser');
 console.log('  8. F5 → réponses restaurées');
 console.log('  9. Mobile : redimensionner');
+

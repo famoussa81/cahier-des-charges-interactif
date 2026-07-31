@@ -106,17 +106,6 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--
 .fi .nm{flex:1;word-break:break-all}
 .fi .dl{color:var(--err);cursor:pointer;font-weight:700;border:none;background:none;font-size:1rem;padding:2px 6px;border-radius:4px}
 .fi .dl:hover{background:var(--err-bg)}
-.cp{background:var(--card);border-radius:var(--r);overflow:hidden;border:1px solid #eef0f6;margin-top:10px;display:inline-block}
-.ctg{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;cursor:pointer;color:#888;font-size:.83rem;border:none;background:none}
-.ctg:hover{color:var(--primary)}
-.ctb{padding:14px 16px;border-top:1px solid #eef0f6;display:none;text-align:left}
-.ctb.o{display:block}
-.ctb .fg{margin-bottom:12px}
-.ctb label{font-weight:600;font-size:.82rem}
-.ctb input{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;font-family:inherit}
-.ctb input:focus{outline:none;border-color:var(--primary)}
-.ctb .bs{display:block;width:100%;padding:9px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.88rem;margin-top:6px}
-.ctb .bs:hover{background:var(--primary-d)}
 .sc{text-align:center;padding:32px 16px}
 .sc .big{font-size:3.5rem;margin-bottom:12px}
 .sc h2{font-size:1.6rem;font-weight:800;margin-bottom:6px}
@@ -231,12 +220,6 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--
   .ri .q{font-size:.78rem}
   .ri .a{font-size:.8rem;margin-top:1px}
   .ft{padding:8px;font-size:.78rem}
-  .cp{margin-top:6px}
-  .ctg{padding:8px 12px;font-size:.78rem}
-  .ctb{padding:10px 12px}
-  .ctb .fg{margin-bottom:9px}
-  .ctb input{padding:7px 9px;font-size:.85rem}
-  .ctb .bs{padding:7px;font-size:.82rem}
 }
 
 /* Tr�s petit mobile (=380) */
@@ -309,14 +292,6 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--
 
 <div class="ft">
 Fait avec &#10084; par <strong>SNG</strong>
-<div class="cp">
-<button class="ctg" id="cfgT">&#9881; Configuration pro</button>
-<div class="ctb" id="cfgB">
-<div class="fg"><label>Ton email de réception</label><input type="email" id="cfgE" placeholder="toi@email.fr"></div>
-<div class="fg"><label>Ton nom / marque</label><input type="text" id="cfgN" placeholder="SNG"></div>
-<div class="fg"><label>Couleur principale (hex)</label><input type="text" id="cfgC" placeholder="#4f46e5"></div>
-<button class="bs" id="cfgS">&#128190; Enregistrer</button>
-</div>
 </div>
 </div>
 
@@ -468,8 +443,8 @@ function fv(id){
   return e.value.trim();
 }
 
-function gE(){return N.cE.value.trim()||'sanogofamoussa81@gmail.com';}
-function gN(){return N.cN.value.trim()||'SNG';}
+function gE(){return 'sanogofamoussa81@gmail.com';}
+function gN(){return 'SNG';}
 
 function rQ(ids){
   var h='';
@@ -852,7 +827,6 @@ function ld(){
   }catch(e){}
 }
 
-function svB(){
   var d={e:N.cE.value.trim(),n:N.cN.value.trim()||'SNG',c:N.cC.value.trim()||'#4f46e5'};
   try{localStorage.setItem('sng_b',JSON.stringify(d));}catch(e){}
   if(d.c)document.documentElement.style.setProperty('--primary',d.c);
@@ -877,12 +851,10 @@ function ldD(){
   N.name=$('#iN');N.email=$('#iE');N.sc=$('#sc');N.pf=$('#pf');N.sL=$('#sL');N.nd=$('#nd');
   N.mo=$('#mo');N.mT=$('#mT');N.mD=$('#mD');N.eA=$('#eA');N.t=$('#t');
   N.bC=$('#bC');N.bD=$('#bDl');N.bP=$('#bPdf');N.bX=$('#bX');
-  N.cE=$('#cfgE');N.cN=$('#cfgN');N.cC=$('#cfgC');N.cS=$('#cfgS');N.cT=$('#cfgT');N.cB=$('#cfgB');
   N.scH=$('#scHint');
   $('#logoTop').onclick=function(){gS(0);};
-  ld();
+
   N.cT.onclick=function(){N.cB.classList.toggle('o');};
-  N.cS.onclick=svB;
   N.bC.onclick=function(){N.eA.select();navigator.clipboard.writeText(N.eA.value);t('Copié !','k');};
   N.bD.onclick=function(){var b=new Blob([N.eA.value],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='PRD-'+new Date().toISOString().slice(0,10)+'.txt';a.click();URL.revokeObjectURL(a.href);};
   N.bP.onclick=gP;
