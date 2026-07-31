@@ -618,7 +618,7 @@ function restoreAnswers(){
 }
 
 function s2(){
-  N.sc.innerHTML='<div class="card"><h2>Objectifs &amp; budget</h2><p class="d">Pour la meilleure proposition.</p>'+rQ(BQ)+'</div><div class="card"><h2>Fichiers</h2><p class="d">Logo, photos, charte...</p><div class="uz" id="uz"><div class="ui">&#128228;</div><div>Clique ou dépose</div><div style="font-size:.78rem;margin-top:3px">PNG, JPG, PDF (max 5 Mo)</div></div><div class="fl" id="fl"></div></div>';
+  N.sc.innerHTML='<div class="card"><h2>Objectifs &amp; budget</h2><p class="d">Pour la meilleure proposition.</p>'+rQ(BQ)+'</div><div class="card"><h2>Fichiers</h2><p class="d">Logo, photos, charte...</p><div class="uz" id="uz"><div class="ui">&#128228;</div><div>Clique ou dépose</div><div style="font-size:.78rem;margin-top:3px">Photos compressées automatiquement · PDF max 5 Mo</div></div><div class="fl" id="fl"></div></div>';
   bEv();
   updateBottomNav();
   iU();
@@ -648,21 +648,92 @@ function iU(){
   };
 }
 
-function hF(files){
-  Array.from(files).forEach(function(f){
-    if(f.size>5*1024*1024){t(esc(f.name)+' : >5 Mo','e');return;}
-    if(!f.type.startsWith('image/')&&f.type!=='application/pdf'){t(esc(f.name)+' : type non accepté','e');return;}
-    var r=new FileReader();
-    r.onload=function(e){S.files.push({name:f.name,data:e.target.result});rF();sv();};
-    r.readAsDataURL(f);
+function fSize(f){
+  if(f.size)return f.size;
+  var m=f.data.match(/^data:([^;,]+);base64,(.*)$/);
+  return m?Math.floor(m[2].length*3/4):0;
+}
+function fSz(n){
+  if(n<1024)return n+' o';
+  if(n<1048576)return Math.round(n/1024)+' Ko';
+  return (n/1048576).toFixed(1)+' Mo';
+}
+function readOrig(f,res){
+  var r=new FileReader();
+  r.onload=function(e){res({name:f.name,data:e.target.result,size:f.size});};
+  r.readAsDataURL(f);
+}
+function rImg(f){
+  return new Promise(function(res){
+    var url=URL.createObjectURL(f);
+    var im=new Image();
+    im.onload=function(){
+      URL.revokeObjectURL(url);
+      try{
+        var MAX=1920;
+        var sc=Math.min(1,MAX/Math.max(im.width,im.height));
+        var w=Math.max(1,Math.round(im.width*sc)),h=Math.max(1,Math.round(im.height*sc));
+        var c=document.createElement('canvas');
+        c.width=w;c.height=h;
+        var x=c.getContext('2d');
+        x.drawImage(im,0,0,w,h);
+        var compressible=(f.type==='image/jpeg'||f.type==='image/png'||f.type==='image/webp');
+        if(!compressible){readOrig(f,res);return;}
+        var hasAlpha=false;
+        if(f.type==='image/png'||f.type==='image/webp'){
+          var d=x.getImageData(0,0,w,h).data;
+          for(var i=3;i<d.length;i+=4){if(d[i]<250){hasAlpha=true;break;}}
+        }
+        var fmt=hasAlpha?'image/png':'image/jpeg';
+        c.toBlob(function(b){
+          if(!b){readOrig(f,res);return;}
+          if(sc===1&&b.size>=f.size){readOrig(f,res);return;}
+          var outName=hasAlpha?f.name:f.name.replace(/\.(png|webp)$/i,'.jpg');
+          var r=new FileReader();
+          r.onload=function(e){res({name:outName,data:e.target.result,size:b.size});};
+          r.readAsDataURL(b);
+        },fmt,0.85);
+      }catch(ex){readOrig(f,res);}
+    };
+    im.onerror=function(){URL.revokeObjectURL(url);readOrig(f,res);};
+    im.src=url;
   });
+}
+function hF(files){
+  var list=Array.from(files);
+  (function next(i){
+    if(i>=list.length)return;
+    var f=list[i];
+    if(!f.type.startsWith('image/')&&f.type!=='application/pdf'){t(esc(f.name)+' : type non accepté','e');next(i+1);return;}
+    var isImg=f.type.startsWith('image/');
+    if(f.size>(isImg?25*1024*1024:5*1024*1024)){t(esc(f.name)+' : '+(isImg?'photo trop lourde':'PDF trop lourd'),'e');next(i+1);return;}
+    var done=function(item){
+      if(!item||!item.data){next(i+1);return;}
+      var total=S.files.reduce(function(s,x){return s+fSize(x);},0);
+      if(total+item.size>10*1024*1024){
+        t(esc(item.name)+' : limite de 10 Mo atteinte','e');
+        next(i+1);return;
+      }
+      S.files.push(item);
+      rF();sv();
+      next(i+1);
+    };
+    if(isImg&&(f.type==='image/jpeg'||f.type==='image/png'||f.type==='image/webp')){
+      rImg(f).then(done);
+    }else{
+      readOrig(f,done);
+    }
+  })(0);
 }
 
 function rF(){
   var l=$('#fl');
   if(!l)return;
   if(!S.files.length){l.innerHTML='<div style="color:#bbb;font-size:.83rem;text-align:center;padding:6px">Aucun fichier</div>';return;}
-  l.innerHTML=S.files.map(function(f,i){return '<div class="fi"><span class="nm">'+esc(f.name)+'</span><button class="dl" data-i="'+i+'">&#10005;</button></div>';}).join('');
+  var total=S.files.reduce(function(s,f){return s+fSize(f);},0);
+  var over=total>9.5*1024*1024;
+  l.innerHTML=S.files.map(function(f,i){return '<div class="fi"><span class="nm">'+esc(f.name)+'</span><span style="color:#888;font-size:.75rem;white-space:nowrap">'+fSz(fSize(f))+'</span><button class="dl" data-i="'+i+'">&#10005;</button></div>';}).join('')
+    +'<div style="text-align:right;font-size:.78rem;color:'+(over?'#dc2626':'#888')+';margin-top:6px">Total : '+fSz(total)+' / 10 Mo'+(over?' — presque plein !':'')+'</div>';
   l.querySelectorAll('.dl').forEach(function(b){b.onclick=function(){S.files.splice(parseInt(b.dataset.i),1);rF();sv();};});
 }
 
@@ -783,8 +854,7 @@ async function sM(n,e,c){
     fd.append('_captcha','false');
     var total=0;
     S.files.forEach(function(f){
-      var m=f.data.match(/^data:([^;,]+);base64,(.*)$/);
-      if(m)total+=Math.floor(m[2].length*3/4);
+      total+=fSize(f);
     });
     if(total>10*1024*1024){t('Fichiers trop lourds (10 Mo max)','e');return null;}
     S.files.forEach(function(f){
