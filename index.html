@@ -820,18 +820,6 @@ function sv(){
   try{localStorage.setItem('sng_q',JSON.stringify(d));}catch(ex){}
 }
 
-function ld(){
-  try{
-    var r=localStorage.getItem('sng_b');
-    if(r){var d=JSON.parse(r);if(d.e)N.cE.value=d.e;if(d.n)N.cN.value=d.n;if(d.c){N.cC.value=d.c;document.documentElement.style.setProperty('--primary',d.c);}}
-  }catch(e){}
-}
-
-  var d={e:N.cE.value.trim(),n:N.cN.value.trim()||'SNG',c:N.cC.value.trim()||'#4f46e5'};
-  try{localStorage.setItem('sng_b',JSON.stringify(d));}catch(e){}
-  if(d.c)document.documentElement.style.setProperty('--primary',d.c);
-  t('Sauvegardé !','k');
-}
 
 function ldD(){
   try{
@@ -851,10 +839,8 @@ function ldD(){
   N.name=$('#iN');N.email=$('#iE');N.sc=$('#sc');N.pf=$('#pf');N.sL=$('#sL');N.nd=$('#nd');
   N.mo=$('#mo');N.mT=$('#mT');N.mD=$('#mD');N.eA=$('#eA');N.t=$('#t');
   N.bC=$('#bC');N.bD=$('#bDl');N.bP=$('#bPdf');N.bX=$('#bX');
-  N.scH=$('#scHint');
   $('#logoTop').onclick=function(){gS(0);};
 
-  N.cT.onclick=function(){N.cB.classList.toggle('o');};
   N.bC.onclick=function(){N.eA.select();navigator.clipboard.writeText(N.eA.value);t('Copié !','k');};
   N.bD.onclick=function(){var b=new Blob([N.eA.value],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='PRD-'+new Date().toISOString().slice(0,10)+'.txt';a.click();URL.revokeObjectURL(a.href);};
   N.bP.onclick=gP;
