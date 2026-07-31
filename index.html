@@ -250,7 +250,6 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--
 .c::-webkit-scrollbar-track{background:transparent}
 .c::-webkit-scrollbar-thumb{background:#d0d5e0;border-radius:99px}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <div class="nav">
@@ -298,14 +297,7 @@ Fait avec &#10084; par <strong>SNG</strong>
 <div class="m">
 <h3 id="mT">&#9989; Envoyé !</h3>
 <p class="md" id="mD">Merci !</p>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-<button class="bp" id="bPdf">&#128196; PRD PDF</button>
-<button class="bd" id="bDl">&#11015; .txt</button>
-<button class="bp" id="bZip">&#128230; Tout en ZIP</button>
-</div>
-<textarea id="eA" readonly></textarea>
 <div class="ma">
-<button class="bc" id="bC">&#128203; Copier</button>
 <button class="bx" id="bX">Fermer</button>
 </div>
 </div>
@@ -714,8 +706,7 @@ function s3(){
 }
 
 function s4(){
-  N.sc.innerHTML='<div class="sc"><div class="big">&#127881;</div><h2>Merci !</h2><p>'+esc(gN())+' a reçu ton cahier des charges. Réponse sous 24h.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn-p" id="dP" style="margin:0">&#128196; PRD</button><button class="btn-s" id="dN" style="margin:0">Nouveau formulaire</button></div></div>';
-  $('#dP').onclick=gP;
+  N.sc.innerHTML='<div class="sc"><div class="big">&#127881;</div><h2>Merci !</h2><p>'+esc(gN())+' a reçu ton cahier des charges. Réponse sous 24h.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn-p" id="dN" style="margin:0">Nouveau formulaire</button></div></div>';
   $('#dN').onclick=function(){localStorage.removeItem('sng_q');location.reload();};
   updateBottomNav();
 }
@@ -734,15 +725,22 @@ function sA(){
   if(btn){btn.textContent='Envoi...';btn.disabled=true;}
   (async function(){
     var result=await sM(n,e,content);
-    if(result&&result.v==='m')oM(n,e,content);
-    N.eA.value=content;
-    if(result&&result.ok&&result.v!=='m'){N.mT.innerHTML='&#9989; Envoyé !';N.mD.innerHTML=esc(gN())+' a reçu tes réponses.';t('Envoyé !','k');}
-    else if(result&&result.v==='m'){N.mT.innerHTML='Client mail';N.mD.innerHTML='Ton logiciel de messagerie.';t('Client mail','k');}
-    else{N.mT.innerHTML='PRD prêt';N.mD.innerHTML='Copie et envoie à '+esc(gN())+'.';t('PRD prêt','k');}
-    N.mo.classList.add('a');
-    document.body.style.overflow='hidden';
-    gS(4);
     if(btn)btn.disabled=false;
+    if(result&&result.ok){
+      N.mT.innerHTML='&#9989; Envoyé !';
+      N.mD.innerHTML=esc(gN())+' a reçu tes réponses. Réponse sous 24h.';
+      N.mo.classList.add('a');
+      document.body.style.overflow='hidden';
+      t('Envoyé !','k');
+      gS(4);
+    }else{
+      N.mT.innerHTML='&#10060; Envoi impossible';
+      N.mD.innerHTML='Vérifie ta connexion internet et réessaie.';
+      N.mo.classList.add('a');
+      document.body.style.overflow='hidden';
+      t('Envoi impossible','e');
+      if(btn)btn.innerHTML='&#128228; Envoyer à '+esc(gN());
+    }
   })();
 }
 
@@ -774,70 +772,34 @@ function cl(t,n,e){
 
 async function sM(n,e,c){
   var to=gE();
-  if(navigator.onLine){
-    try{
-      var payload={
-        _subject:'[PRD] Cahier des charges - '+n,
-        _template:'table',
-        name:n||'Client',
-        email:e||'-',
-        message:c,
-        _captcha:'false'
-      };
-      var r=await fetch('https://formsubmit.co/ajax/'+to,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify(payload)
-      });
-      var data=await r.json();
-      if(data&&data.success==='true')return{ok:true,v:'ej'};
-    }catch(ex){}
-  }
-  return{ok:true,v:'m'};
-}
-function oM(n,e,c){
-  var to=gE(),sub=encodeURIComponent('[PRD] Cahier des charges - '+n),body=encodeURIComponent('Bonjour '+gN()+',\n\nVoici mon cahier des charges.\n\n--- REPONSES ---\n'+c+'\n---\n\nDe '+n+' ('+e+')');
-  var u='mailto:'+to+'?subject='+sub+'&body='+body;
-  var w=window.open(u,'_blank');
-  if(!w||w.closed){var a=document.createElement('a');a.href=u;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);},1000);}
-}
-
-function gZ(){
-  var n=N.name.value.trim()||'Client';
-  var e=N.email.value.trim()||'client@email.fr';
-  var c=cl(S.type,n,e);
-  var prdName='PRD-'+n.replace(/\s+/g,'_')+'.txt';
-  if(typeof JSZip==='undefined'){
-    t('Lib ZIP non chargée','e');
-    return;
-  }
-  var zip=new JSZip();
-  zip.file(prdName,c);
-  S.files.forEach(function(f){
-    // f.data is a base64 data URL like data:image/png;base64,XXXX
-    var m=f.data.match(/^data:([^;,]+);base64,(.*)$/);
-    if(m){
-      zip.file(f.name,m[2],{base64:true});
-    }
-  });
-  zip.generateAsync({type:'blob'}).then(function(blob){
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='Dossier-PRD-'+n.replace(/\s+/g,'_')+'.zip';
-    a.click();
-    setTimeout(function(){URL.revokeObjectURL(a.href);},10000);
-    t('ZIP téléchargé ! Contient PRD + '+S.files.length+' fichier(s)','k');
-  });
-}
-function gP(){
-  var n=N.name.value.trim()||'Client',e=N.email.value.trim()||'client@email.fr',c=cl(S.type,n,e);
-  var safe=c.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  var h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PRD - '+n.replace(/</g,'').replace(/>/g,'')+'</title><style>body{font-family:Segoe UI,sans-serif;padding:40px;color:#1a1a2e;line-height:1.6;font-size:13px}pre{white-space:pre-wrap;background:#f4f6fb;padding:20px;border-radius:8px;border:1px solid #eef0f6}</style></head><body><pre>'+safe+'</pre></body></html>';
-  var b=new Blob([h],{type:'text/html'}),u=URL.createObjectURL(b);
-  var w=window.open(u,'_blank');
-  if(!w||w.closed){var a=document.createElement('a');a.href=u;a.download='PRD-'+n.replace(/\s+/g,'_')+'.html';a.click();}
-  setTimeout(function(){URL.revokeObjectURL(u);},10000);
-  t('PDF : imprime en PDF','k');
+  if(!navigator.onLine)return null;
+  try{
+    var fd=new FormData();
+    fd.append('_subject','[PRD] Cahier des charges - '+n);
+    fd.append('_template','table');
+    fd.append('name',n||'Client');
+    fd.append('email',e||'-');
+    fd.append('message',c);
+    fd.append('_captcha','false');
+    var total=0;
+    S.files.forEach(function(f){
+      var m=f.data.match(/^data:([^;,]+);base64,(.*)$/);
+      if(m)total+=Math.floor(m[2].length*3/4);
+    });
+    if(total>10*1024*1024){t('Fichiers trop lourds (10 Mo max)','e');return null;}
+    S.files.forEach(function(f){
+      var m=f.data.match(/^data:([^;,]+);base64,(.*)$/);
+      if(!m)return;
+      var bin=atob(m[2]);
+      var u8=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+      fd.append('attachment',new Blob([u8],{type:m[1]}),f.name);
+    });
+    var r=await fetch('https://formsubmit.co/ajax/'+to,{method:'POST',body:fd});
+    var data=await r.json();
+    if(data&&data.success==='true')return{ok:true};
+  }catch(ex){}
+  return null;
 }
 
 function sv(){
@@ -874,13 +836,8 @@ function ldD(){
 
 (function(){
   N.name=$('#iN');N.email=$('#iE');N.sc=$('#sc');N.pf=$('#pf');N.sL=$('#sL');N.nd=$('#nd');
-  N.mo=$('#mo');N.mT=$('#mT');N.mD=$('#mD');N.eA=$('#eA');N.t=$('#t');
-  N.bC=$('#bC');N.bD=$('#bDl');N.bP=$('#bPdf');N.bZ=$('#bZip');N.bX=$('#bX');
+  N.mo=$('#mo');N.mT=$('#mT');N.mD=$('#mD');N.t=$('#t');N.bX=$('#bX');
   $('#logoTop').onclick=function(){gS(0);};
-
-  N.bC.onclick=function(){N.eA.select();navigator.clipboard.writeText(N.eA.value);t('Copié !','k');};
-  N.bD.onclick=function(){var b=new Blob([N.eA.value],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='PRD-'+new Date().toISOString().slice(0,10)+'.txt';a.click();URL.revokeObjectURL(a.href);};
-  N.bP.onclick=gP;N.bZ.onclick=gZ;
   N.bX.onclick=function(){N.mo.classList.remove('a');document.body.style.overflow='';};
   N.mo.onclick=function(e){if(e.target===N.mo){N.mo.classList.remove('a');document.body.style.overflow='';}};
   ldD();
