@@ -222,7 +222,7 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--
   .ft{padding:8px;font-size:.78rem}
 }
 
-/* Tr�s petit mobile (=380) */
+/* Très petit mobile (=380) */
 @media(max-width:380px){
   .logo{font-size:.92rem}
   .hero h1{font-size:1.15rem}
@@ -250,6 +250,7 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--
 .c::-webkit-scrollbar-track{background:transparent}
 .c::-webkit-scrollbar-thumb{background:#d0d5e0;border-radius:99px}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <div class="nav">
@@ -300,6 +301,7 @@ Fait avec &#10084; par <strong>SNG</strong>
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
 <button class="bp" id="bPdf">&#128196; PRD PDF</button>
 <button class="bd" id="bDl">&#11015; .txt</button>
+<button class="bp" id="bZip">&#128230; Tout en ZIP</button>
 </div>
 <textarea id="eA" readonly></textarea>
 <div class="ma">
@@ -800,6 +802,33 @@ function oM(n,e,c){
   if(!w||w.closed){var a=document.createElement('a');a.href=u;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);},1000);}
 }
 
+function gZ(){
+  var n=N.name.value.trim()||'Client';
+  var e=N.email.value.trim()||'client@email.fr';
+  var c=cl(S.type,n,e);
+  var prdName='PRD-'+n.replace(/\s+/g,'_')+'.txt';
+  if(typeof JSZip==='undefined'){
+    t('Lib ZIP non chargée','e');
+    return;
+  }
+  var zip=new JSZip();
+  zip.file(prdName,c);
+  S.files.forEach(function(f){
+    // f.data is a base64 data URL like data:image/png;base64,XXXX
+    var m=f.data.match(/^data:([^;,]+);base64,(.*)$/);
+    if(m){
+      zip.file(f.name,m[2],{base64:true});
+    }
+  });
+  zip.generateAsync({type:'blob'}).then(function(blob){
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='Dossier-PRD-'+n.replace(/\s+/g,'_')+'.zip';
+    a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);},10000);
+    t('ZIP téléchargé ! Contient PRD + '+S.files.length+' fichier(s)','k');
+  });
+}
 function gP(){
   var n=N.name.value.trim()||'Client',e=N.email.value.trim()||'client@email.fr',c=cl(S.type,n,e);
   var safe=c.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -846,12 +875,12 @@ function ldD(){
 (function(){
   N.name=$('#iN');N.email=$('#iE');N.sc=$('#sc');N.pf=$('#pf');N.sL=$('#sL');N.nd=$('#nd');
   N.mo=$('#mo');N.mT=$('#mT');N.mD=$('#mD');N.eA=$('#eA');N.t=$('#t');
-  N.bC=$('#bC');N.bD=$('#bDl');N.bP=$('#bPdf');N.bX=$('#bX');
+  N.bC=$('#bC');N.bD=$('#bDl');N.bP=$('#bPdf');N.bZ=$('#bZip');N.bX=$('#bX');
   $('#logoTop').onclick=function(){gS(0);};
 
   N.bC.onclick=function(){N.eA.select();navigator.clipboard.writeText(N.eA.value);t('Copié !','k');};
   N.bD.onclick=function(){var b=new Blob([N.eA.value],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='PRD-'+new Date().toISOString().slice(0,10)+'.txt';a.click();URL.revokeObjectURL(a.href);};
-  N.bP.onclick=gP;
+  N.bP.onclick=gP;N.bZ.onclick=gZ;
   N.bX.onclick=function(){N.mo.classList.remove('a');document.body.style.overflow='';};
   N.mo.onclick=function(e){if(e.target===N.mo){N.mo.classList.remove('a');document.body.style.overflow='';}};
   ldD();
