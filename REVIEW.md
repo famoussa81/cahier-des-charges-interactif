@@ -4,6 +4,13 @@
 > Objectif : détecter anomalies, incohérences, régressions et axes d'amélioration.
 > Généré le 30 juillet 2026 — Agent de Review SNG
 
+> ⚠️ **OBSOLÈTE — document d'archive.** Cette grille date de la **v3.0** (EmailJS, panneau ⚙️, exports PRD) : elle teste des fonctionnalités qui **n'existent plus** dans le code actuel. Le questionnaire est passé en **v3.2** :
+> - **Envoi multi-canal** : Web3Forms (clé configurable, pièces jointes fiables) + FormSubmit (zéro config) + **dossier HTML avec images embarquées**, joint automatiquement à chaque email et téléchargeable par le client.
+> - **Validation réelle des champs obligatoires** à chaque étape (`validateStep`) — les badges « Obligatoire » ne sont plus décoratifs.
+> - **Copie du brief pour le client** : 📋 / ⬇️ .txt / 📄 dossier.
+> - **esc() durci** (échappe aussi `"` et `'` — failles A-01/A-02 corrigées), **CFG** centralisé (email/brand/web3formsKey — A-04/A-05 corrigées), **honeypot** anti-spam, **persistance des fichiers** sous quota localStorage (A-06/A-08 traités).
+> - Les 18 vérifications logiques (validation, dossier, envoi multi-canal, honeypot) sont couvertes par un harness de test automatisé.
+
 ---
 
 ## 📋 Comment utiliser cette grille
