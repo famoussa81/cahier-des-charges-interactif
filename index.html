@@ -928,7 +928,11 @@ function sA(){
     var result=await sendMail(n,e,content,html);
     if(btn){btn.disabled=false;btn.innerHTML='&#128228; Envoyer à '+esc(gN());}
     if(result&&result.ok){
-      openModal('&#9989; C’est parti !',esc(gN())+' a reçu ton cahier des charges. Réponse sous 24h. Garde une copie :',
+      var okDesc=esc(gN())+' a reçu ton cahier des charges. Réponse sous 24h. Garde une copie :';
+      if(result.via==='formsubmit'&&result.wfError){
+        okDesc='⚠️ Envoi via FormSubmit (les images ne sont pas garanties). Raison Web3Forms : '+esc(result.wfError)+'. Garde une copie :';
+      }
+      openModal('&#9989; C’est parti !',okDesc,
         [
           {label:'📋 Copier mon brief',cls:'bc',cb:function(){copyText(content);}},
           {label:'⬇️ .txt',cls:'bd',cb:function(){dl('brief-'+n.replace(/\s+/g,'-').toLowerCase()+'.txt',content);}},
@@ -938,7 +942,9 @@ function sA(){
       t('Envoyé !','k');
       gS(4);
     }else{
-      openModal('&#10060; Envoi impossible','Vérifie ta connexion internet. Pour ne rien perdre, télécharge ton dossier (images incluses) et envoie-le par email, puis réessaie.',
+      var koDesc='Vérifie ta connexion internet. Pour ne rien perdre, télécharge ton dossier (images incluses) et envoie-le par email, puis réessaie.';
+      if(result&&result.wfError)koDesc='Web3Forms : '+esc(result.wfError)+'. Vérifie ta connexion. Pour ne rien perdre, télécharge ton dossier (images incluses) et envoie-le, puis réessaie.';
+      openModal('&#10060; Envoi impossible',koDesc,
         [
           {label:'↻ Réessayer',cls:'bc',cb:function(){closeModal();sA();}},
           {label:'📄 Télécharger mon dossier',cls:'bp',cb:function(){dl(fName('dossier'),html,'text/html;charset=utf-8');}},
@@ -982,6 +988,7 @@ async function sendMail(n,e,content,html){
   var total=0;S.files.forEach(function(f){total+=fSize(f);});
   if(total>10*1024*1024){t('Fichiers trop lourds (10 Mo max)','e');return{ok:false};}
   var dossier=new Blob([html],{type:'text/html;charset=utf-8'});
+  var wfErr='';
   // 1) Web3Forms — recommandé : les pièces jointes (images) arrivent de façon fiable
   if(CFG.web3formsKey){
     try{
@@ -997,7 +1004,8 @@ async function sendMail(n,e,content,html){
       var r=await fetch('https://api.web3forms.com/submit',{method:'POST',body:fd});
       var d=await r.json();
       if(d&&d.success)return{ok:true,via:'web3forms'};
-    }catch(ex){}
+      wfErr=(d&&d.message)?d.message:'Web3Forms : réponse invalide';
+    }catch(ex){wfErr='Web3Forms : '+((ex&&ex.message)||'erreur réseau');}
   }
   // 2) FormSubmit — zéro configuration (texte garanti ; pièces jointes non garanties sur le plan gratuit)
   try{
@@ -1014,9 +1022,9 @@ async function sendMail(n,e,content,html){
     fd2.append('attachment',dossier,'dossier-client.html');
     var r2=await fetch('https://formsubmit.co/ajax/'+gE(),{method:'POST',body:fd2});
     var d2=await r2.json();
-    if(d2&&d2.success==='true')return{ok:true,via:'formsubmit'};
+    if(d2&&d2.success==='true')return{ok:true,via:'formsubmit',wfError:wfErr};
   }catch(ex){}
-  return{ok:false};
+  return{ok:false,wfError:wfErr};
 }
 
 function sv(){
